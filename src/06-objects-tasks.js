@@ -20,8 +20,12 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+function Rectangle(width, height) {
+  return {
+    width,
+    height,
+    getArea: () => width * height,
+  };
 }
 
 
@@ -35,8 +39,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 
@@ -53,6 +57,7 @@ function getJSON(/* obj */) {
  */
 function fromJSON(/* proto, json */) {
   throw new Error('Not implemented');
+  // return Object.assign(proto, JSON.parse(json));
 }
 
 
@@ -111,32 +116,119 @@ function fromJSON(/* proto, json */) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  string: '',
+
+  order: [],
+
+  stringify() {
+    const sortOrder = [...this.order];
+    if (!sortOrder.sort((a, b) => a - b).every((e, i) => e === this.order[i])) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    return this.string;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    const order = [...this.order];
+    order.push(0);
+    const sortOrder = [...order];
+    if (!sortOrder.sort((a, b) => a - b).every((e, i) => e === order[i])) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    if (this.isElement) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    return {
+      order,
+      isElement: true,
+      string: this.string + value,
+      __proto__: this,
+    };
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const order = [...this.order];
+    order.push(1);
+    const sortOrder = [...order];
+    if (!sortOrder.sort((a, b) => a - b).every((e, i) => e === order[i])) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    if (this.isId) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    return {
+      order,
+      isId: true,
+      string: `${this.string}#${value}`,
+      __proto__: this,
+    };
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const order = [...this.order];
+    order.push(2);
+    const sortOrder = [...order];
+    if (!sortOrder.sort((a, b) => a - b).every((e, i) => e === order[i])) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    return {
+      order,
+      string: `${this.string}.${value}`,
+      __proto__: this,
+    };
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const order = [...this.order];
+    order.push(3);
+    const sortOrder = [...order];
+    if (!sortOrder.sort((a, b) => a - b).every((e, i) => e === order[i])) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    return {
+      order,
+      string: `${this.string}[${value}]`,
+      __proto__: this,
+    };
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const order = [...this.order];
+    order.push(4);
+    const sortOrder = [...order];
+    if (!sortOrder.sort((a, b) => a - b).every((e, i) => e === order[i])) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    return {
+      order,
+      string: `${this.string}:${value}`,
+      __proto__: this,
+    };
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const order = [...this.order];
+    order.push(5);
+    const sortOrder = [...order];
+    if (!sortOrder.sort((a, b) => a - b).every((e, i) => e === order[i])) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    if (this.isPseudoElement) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    return {
+      order,
+      isPseudoElement: true,
+      string: `${this.string}::${value}`,
+      __proto__: this,
+    };
+  },
+
+  combine(selector1, combinator, selector2) {
+    return {
+      string: `${selector1.string} ${combinator} ${selector2.string}`,
+      __proto__: this,
+    };
   },
 };
 
